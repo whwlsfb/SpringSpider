@@ -37,6 +37,7 @@ public class APIDoc implements ISubScanner {
             add(new String[]{"api-docs"});
             add(new String[]{"v2", "api-docs"});
             add(new String[]{"v2", "api-docs-ext"});
+            add(new String[]{"swagger", "v1", "swagger.json"});
         }}, (baseRequestResponse, checkRequest, newUrl) -> {
             IResponseKeywords founds = Utils.Helpers.analyzeResponseKeywords(new ArrayList<String>() {{
                 add("swagger");

@@ -4,6 +4,8 @@ import burp.*;
 import burp.scanner.IResponseChecker;
 import burp.scanner.ISubScanner;
 import burp.scanner.Payload;
+import burp.utils.BypassPayloadUtils;
+import burp.utils.Utils;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -14,18 +16,42 @@ public class SpringActuator implements ISubScanner {
         add(new Payload(new ArrayList<String[]>() {{
             add(new String[]{"env"});
             add(new String[]{"actuator", "env"});
-        }}, new IResponseChecker() {
-            @Override
-            public Issue checkResponse(IHttpRequestResponse baseRequestResponse, IHttpRequestResponse checkRequest, URL newUrl) {
+        }},  (baseRequestResponse, checkRequest, newUrl) -> {
+            IResponseKeywords founds = Utils.Helpers.analyzeResponseKeywords(new ArrayList<String>() {{
+                add("java.version");
+                add("os.arch");
+            }}, checkRequest.getResponse());
+            if (BypassPayloadUtils.hasFound(founds, 0) && Utils.Helpers.analyzeResponse(checkRequest.getResponse()).getStatusCode() == 200) {
+                Utils.Callback.printOutput("found " + newUrl + ".\r\n");
+                return new Issue(
+                        baseRequestResponse.getHttpService(),
+                        newUrl,
+                        new IHttpRequestResponse[]{checkRequest},
+                        "Spring Actuator-Env found.",
+                        "URL: " + newUrl,
+                        "Medium");
+            } else {
                 return null;
             }
         }));
         add(new Payload(new ArrayList<String[]>() {{
-            add(new String[]{"info"});
-            add(new String[]{"actuator", "info"});
-        }}, new IResponseChecker() {
-            @Override
-            public Issue checkResponse(IHttpRequestResponse baseRequestResponse, IHttpRequestResponse checkRequest, URL newUrl) {
+            add(new String[]{"actuator"});
+        }}, (baseRequestResponse, checkRequest, newUrl) -> {
+            IResponseKeywords founds = Utils.Helpers.analyzeResponseKeywords(new ArrayList<String>() {{
+                add("health");
+                add("env");
+                add("env");
+            }}, checkRequest.getResponse());
+            if (BypassPayloadUtils.hasFound(founds, 0) && Utils.Helpers.analyzeResponse(checkRequest.getResponse()).getStatusCode() == 200) {
+                Utils.Callback.printOutput("found " + newUrl + ".\r\n");
+                return new Issue(
+                        baseRequestResponse.getHttpService(),
+                        newUrl,
+                        new IHttpRequestResponse[]{checkRequest},
+                        "Spring Actuator found.",
+                        "URL: " + newUrl,
+                        "Medium");
+            } else {
                 return null;
             }
         }));
@@ -45,7 +71,28 @@ public class SpringActuator implements ISubScanner {
     }
 
     @Override
-    public List<Issue> check(URL url, IHttpRequestResponse originRequest) {
-        return null;
+    public List<Issue> check(URL url, IHttpRequestResponse originRequestResponse) {
+        IRequestInfo originRequest = Utils.Helpers.analyzeRequest(originRequestResponse);
+        List<String> originHeaders = originRequest.getHeaders();
+        List<Issue> result = new ArrayList<>();
+        for (Payload payload : payloads) {
+            List<Issue> issues = new ArrayList<>();
+            for (String[] resParts : payload.resources) {
+                for (URL newUrl : BypassPayloadUtils.getBypassPayloads(url, resParts)) {
+                    byte[] newRequest = BypassPayloadUtils.makeNewGETRequest(originHeaders, newUrl);
+                    IHttpRequestResponse resp = Utils.Callback.makeHttpRequest(originRequestResponse.getHttpService(), newRequest);
+                    Issue issue = payload.responseChecker.checkResponse(originRequestResponse, resp, newUrl);
+                    if (issue != null) {
+                        issues.add(issue);
+                        break;
+                    }
+                }
+                if (issues.size() > 0) {
+                    break;
+                }
+            }
+            result.addAll(issues);
+        }
+        return result;
     }
 }

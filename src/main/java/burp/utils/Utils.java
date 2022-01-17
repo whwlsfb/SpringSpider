@@ -96,7 +96,9 @@ public class Utils {
             String baseUrl = url.getProtocol() + "://" + url.getAuthority() + "/";
             String[] paths = url.getPath().split("/");
             for (String path : paths) {
-                urls.add(new URL(baseUrl + path));
+                String tmpUrl = baseUrl + path;
+                urls.add(new URL(tmpUrl));
+                //urls.add(new URL(tmpUrl + (tmpUrl.endsWith("/") ?  ".." : "/..")));
                 baseUrl += path + (path.isEmpty() ? "" : "/");
             }
         } catch (Exception ex) {

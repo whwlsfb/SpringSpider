@@ -2,6 +2,7 @@ package burp.scanner;
 
 import burp.*;
 import burp.scanner.sub.APIDoc;
+import burp.scanner.sub.SpringActuator;
 import burp.utils.Utils;
 
 import java.net.URL;
@@ -45,30 +46,45 @@ public class SpringScanner implements IScannerCheck {
             "docx",
             "ppt",
             "pptx",
-            "iso"
+            "iso",
+            "map",
+            "php",
+            "aspx",
+            "ashx",
+            "asp"
     };
 
     List<String> scannedUrls = new ArrayList<>();
     List<ISubScanner> subScanners = new ArrayList<ISubScanner>() {{
         add(new APIDoc());
+        add(new SpringActuator());
     }};
 
     @Override
     public List<IScanIssue> doPassiveScan(IHttpRequestResponse baseRequestResponse) {
-        URL originUrl = Utils.Helpers.analyzeRequest(baseRequestResponse).getUrl();
-        if (!isStaticFile(originUrl)) {
-            List<IScanIssue> result = new ArrayList<>();
-            URL[] urls = Utils.splitUrls(originUrl);
-            for (URL url : urls) {
-                if (!isChecked(url.toString()))
-                    for (ISubScanner subScanner : subScanners) {
-                        result.addAll(subScanner.check(url, baseRequestResponse));
-                    }
-            }
-            return result;
-        } else return null;
+        URL originUrl = cleanURL(Utils.Helpers.analyzeRequest(baseRequestResponse).getUrl());
+        List<IScanIssue> result = new ArrayList<>();
+        URL[] urls = Utils.splitUrls(originUrl);
+        for (URL url : urls) {
+            if (!isChecked(url.toString()))
+                for (ISubScanner subScanner : subScanners) {
+                    result.addAll(subScanner.check(url, baseRequestResponse));
+                }
+        }
+        return result;
     }
 
+    public URL cleanURL(URL originUrl) {
+        String baseUrl = originUrl.getProtocol() + "://" + originUrl.getAuthority() + "/";
+        String path = originUrl.getPath();
+        if (isStaticFile(originUrl)) {
+            path = path.substring(1, path.lastIndexOf("/"));
+        } try {
+            return new URL(baseUrl + path);
+        } catch (Exception ex) {
+            return originUrl;
+        }
+    }
 
     public boolean isChecked(String url) {
         String urlMd5 = Utils.MD5(url);
