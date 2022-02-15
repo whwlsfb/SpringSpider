@@ -28,7 +28,7 @@ public class APIDoc implements ISubScanner {
                         new IHttpRequestResponse[]{checkRequest},
                         "Swagger UI found.",
                         "URL: " + newUrl,
-                        "Medium");
+                        "Medium", true);
             } else {
                 return null;
             }
@@ -40,7 +40,7 @@ public class APIDoc implements ISubScanner {
             add(new String[]{"swagger", "v1", "swagger.json"});
         }}, (baseRequestResponse, checkRequest, newUrl) -> {
             IResponseKeywords founds = Utils.Helpers.analyzeResponseKeywords(new ArrayList<String>() {{
-                add("swagger");
+                add("\"swagger\":");
             }}, checkRequest.getResponse());
             if (BypassPayloadUtils.hasFound(founds, 0) && Utils.Helpers.analyzeResponse(checkRequest.getResponse()).getStatusCode() == 200) {
                 Utils.Callback.printOutput("found " + newUrl + ".\r\n");
@@ -49,7 +49,7 @@ public class APIDoc implements ISubScanner {
                         new IHttpRequestResponse[]{checkRequest},
                         "API-Docs found.",
                         "URL: " + newUrl,
-                        "Medium");
+                        "Medium", false);
             } else {
                 return null;
             }

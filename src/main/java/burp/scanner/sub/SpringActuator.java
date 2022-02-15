@@ -16,7 +16,7 @@ public class SpringActuator implements ISubScanner {
         add(new Payload(new ArrayList<String[]>() {{
             add(new String[]{"env"});
             add(new String[]{"actuator", "env"});
-        }},  (baseRequestResponse, checkRequest, newUrl) -> {
+        }}, (baseRequestResponse, checkRequest, newUrl) -> {
             IResponseKeywords founds = Utils.Helpers.analyzeResponseKeywords(new ArrayList<String>() {{
                 add("java.version");
                 add("os.arch");
@@ -29,7 +29,7 @@ public class SpringActuator implements ISubScanner {
                         new IHttpRequestResponse[]{checkRequest},
                         "Spring Actuator-Env found.",
                         "URL: " + newUrl,
-                        "Medium");
+                        "Medium", true);
             } else {
                 return null;
             }
@@ -39,8 +39,8 @@ public class SpringActuator implements ISubScanner {
         }}, (baseRequestResponse, checkRequest, newUrl) -> {
             IResponseKeywords founds = Utils.Helpers.analyzeResponseKeywords(new ArrayList<String>() {{
                 add("health");
-                add("env");
-                add("env");
+                add("{\"self\":{");
+                add("{\"_links\":{");
             }}, checkRequest.getResponse());
             if (BypassPayloadUtils.hasFound(founds, 0) && Utils.Helpers.analyzeResponse(checkRequest.getResponse()).getStatusCode() == 200) {
                 Utils.Callback.printOutput("found " + newUrl + ".\r\n");
@@ -50,7 +50,7 @@ public class SpringActuator implements ISubScanner {
                         new IHttpRequestResponse[]{checkRequest},
                         "Spring Actuator found.",
                         "URL: " + newUrl,
-                        "Medium");
+                        "Medium", false);
             } else {
                 return null;
             }

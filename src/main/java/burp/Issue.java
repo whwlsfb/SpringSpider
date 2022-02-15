@@ -10,6 +10,8 @@ public class Issue implements IScanIssue {
     private String name;
     private String detail;
     private String severity;
+    private boolean isCertain;
+
 
     public Issue(
             IHttpService httpService,
@@ -24,6 +26,23 @@ public class Issue implements IScanIssue {
         this.name = name;
         this.detail = detail;
         this.severity = severity;
+        this.isCertain = false;
+    }
+
+    public Issue(
+            IHttpService httpService,
+            URL url,
+            IHttpRequestResponse[] httpMessages,
+            String name,
+            String detail,
+            String severity, boolean isCertain) {
+        this.httpService = httpService;
+        this.url = url;
+        this.httpMessages = httpMessages;
+        this.name = name;
+        this.detail = detail;
+        this.severity = severity;
+        this.isCertain = isCertain;
     }
 
     @Override
@@ -48,7 +67,7 @@ public class Issue implements IScanIssue {
 
     @Override
     public String getConfidence() {
-        return "Certain";
+        return isCertain ? "Certain" : "Firm";
     }
 
     @Override
