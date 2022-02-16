@@ -6,6 +6,7 @@ import burp.scanner.sub.SpringActuator;
 import burp.utils.Utils;
 
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
