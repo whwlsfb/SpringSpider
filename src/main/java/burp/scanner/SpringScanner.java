@@ -1,7 +1,6 @@
 package burp.scanner;
 
 import burp.*;
-import burp.scanner.sub.APIDoc;
 import burp.scanner.sub.SpringActuator;
 import burp.utils.Utils;
 
@@ -57,7 +56,7 @@ public class SpringScanner implements IScannerCheck {
 
     List<String> scannedUrls = new ArrayList<>();
     List<ISubScanner> subScanners = new ArrayList<ISubScanner>() {{
-        add(new APIDoc());
+//        add(new APIDoc());
         add(new SpringActuator());
     }};
 
@@ -76,12 +75,13 @@ public class SpringScanner implements IScannerCheck {
     }
 
     public URL cleanURL(URL originUrl) {
-        String baseUrl = originUrl.getProtocol() + "://" + originUrl.getAuthority() + "/";
+        String baseUrl = originUrl.getProtocol() + "://" + originUrl.getAuthority();
         String path = originUrl.getPath();
         if (isStaticFile(originUrl)) {
-            path = path.substring(1, path.lastIndexOf("/"));
-        } try {
-            return new URL(baseUrl + path);
+            path = path.substring(0, path.lastIndexOf("/"));
+        }
+        try {
+            return new URL(baseUrl + (path.isEmpty() ? "/" : path));
         } catch (Exception ex) {
             return originUrl;
         }

@@ -5,6 +5,7 @@ import burp.scanner.IResponseChecker;
 import burp.scanner.ISubScanner;
 import burp.scanner.Payload;
 import burp.utils.BypassPayloadUtils;
+import burp.utils.ConfigUtils;
 import burp.utils.Utils;
 
 import java.net.URL;
@@ -72,7 +73,7 @@ public class APIDoc implements ISubScanner {
         for (Payload payload : payloads) {
             List<Issue> issues = new ArrayList<>();
             for (String[] resParts : payload.resources) {
-                for (URL newUrl : BypassPayloadUtils.getBypassPayloads(url, resParts)) {
+                for (URL newUrl : BypassPayloadUtils.getBypassPayloads(url, resParts, ConfigUtils.getDict(ConfigUtils.DIR_BYPASS))) {
                     byte[] newRequest = BypassPayloadUtils.makeNewGETRequest(originHeaders, newUrl);
                     IHttpRequestResponse resp = Utils.Callback.makeHttpRequest(originRequestResponse.getHttpService(), newRequest);
                     Issue issue = payload.responseChecker.checkResponse(originRequestResponse, resp, newUrl);

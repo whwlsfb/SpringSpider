@@ -12,7 +12,7 @@ public class BypassPayloadUtils {
     public static final String[] URL_BYPASS = new String[]{
             ".",
             ";",
-//            "..;",
+ //           "..;",
 /*            ";%09..;",
             ";%09..",
             ";%2f..",
@@ -38,13 +38,13 @@ public class BypassPayloadUtils {
     };
     public static final String[] GET_SKIPED_HEADERS = new String[]{"content-type", "content-length"};
 
-    public static URL[] getBypassPayloads(URL baseUrl, String[] resParts) {
+    public static URL[] getBypassPayloads(URL baseUrl, String[] resParts, String[] bypass) {
         List<URL> result = new ArrayList<>();
         String originUrl = baseUrl.toString();
         originUrl = originUrl.endsWith("/") ? originUrl : originUrl + "/";
         try {
             result.add(new URL(originUrl + String.join("/", resParts)));
-            for (String bypassPayload : URL_BYPASS) {
+            for (String bypassPayload : bypass) {
                 result.add(new URL(originUrl + bypassPayload + "/" + String.join("/" + bypassPayload + "/", resParts)));
             }
         } catch (Exception ex) {

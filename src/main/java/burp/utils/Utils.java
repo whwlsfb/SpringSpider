@@ -19,6 +19,7 @@ public class Utils {
     public static IExtensionHelpers Helpers;
     private static MessageDigest md;
     private static SecureRandom rand = new SecureRandom();
+    public static int SplitDeep = 3;
 
     public static long getRandomLong() {
         return rand.nextLong();
@@ -96,6 +97,7 @@ public class Utils {
             String baseUrl = url.getProtocol() + "://" + url.getAuthority() + "/";
             String[] paths = url.getPath().split("/");
             for (String path : paths) {
+                if (urls.size() >= SplitDeep) break;
                 String tmpUrl = baseUrl + path;
                 urls.add(new URL(tmpUrl));
                 //urls.add(new URL(tmpUrl + (tmpUrl.endsWith("/") ?  ".." : "/..")));
@@ -105,6 +107,11 @@ public class Utils {
             System.out.println(ex);
         }
         return urls.toArray(new URL[0]);
+    }
+
+    public static boolean urlAllowScan(String[] urlParts) {
+        String url = "/" + String.join("/", urlParts);
+        return ConfigUtils.getStrInDict(ConfigUtils.SCAN_POINT, url, false);
     }
 
     public static String getCurrentTimeMillis() {

@@ -5,6 +5,7 @@ import burp.scanner.IResponseChecker;
 import burp.scanner.ISubScanner;
 import burp.scanner.Payload;
 import burp.utils.BypassPayloadUtils;
+import burp.utils.ConfigUtils;
 import burp.utils.Utils;
 
 import java.net.URL;
@@ -55,20 +56,13 @@ public class SpringActuator implements ISubScanner {
                 return null;
             }
         }));
-        add(new Payload(new ArrayList<String[]>() {{
-            add(new String[]{"doc.html"});
-        }}, new IResponseChecker() {
-            @Override
-            public Issue checkResponse(IHttpRequestResponse baseRequestResponse, IHttpRequestResponse checkRequest, URL newUrl) {
-                return null;
-            }
-        }));
     }};
 
     @Override
     public String getName() {
         return "Spring Actuator";
     }
+
 
     @Override
     public List<Issue> check(URL url, IHttpRequestResponse originRequestResponse) {
@@ -78,13 +72,15 @@ public class SpringActuator implements ISubScanner {
         for (Payload payload : payloads) {
             List<Issue> issues = new ArrayList<>();
             for (String[] resParts : payload.resources) {
-                for (URL newUrl : BypassPayloadUtils.getBypassPayloads(url, resParts)) {
-                    byte[] newRequest = BypassPayloadUtils.makeNewGETRequest(originHeaders, newUrl);
-                    IHttpRequestResponse resp = Utils.Callback.makeHttpRequest(originRequestResponse.getHttpService(), newRequest);
-                    Issue issue = payload.responseChecker.checkResponse(originRequestResponse, resp, newUrl);
-                    if (issue != null) {
-                        issues.add(issue);
-                        break;
+                if (Utils.urlAllowScan(resParts)) {
+                    for (URL newUrl : BypassPayloadUtils.getBypassPayloads(url, resParts, ConfigUtils.getDict(ConfigUtils.DIR_BYPASS))) {
+                        byte[] newRequest = BypassPayloadUtils.makeNewGETRequest(originHeaders, newUrl);
+                        IHttpRequestResponse resp = Utils.Callback.makeHttpRequest(originRequestResponse.getHttpService(), newRequest);
+                        Issue issue = payload.responseChecker.checkResponse(originRequestResponse, resp, newUrl);
+                        if (issue != null) {
+                            issues.add(issue);
+                            break;
+                        }
                     }
                 }
                 if (issues.size() > 0) {
