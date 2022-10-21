@@ -9,6 +9,7 @@ public class ConfigUtils {
     public static final String DIR_SCAN_DEEPER = "dir_scan_deeper";
     public static final String DIR_BYPASS = "dir_bypass";
     public static final String SCAN_POINT = "scan_point";
+    public static final String ENABLE = "enable";
 
     public static String get(String name) {
         return Utils.Callback.loadExtensionSetting(name);

@@ -26,6 +26,8 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener {
         this.stderr = new PrintWriter(callbacks.getStderr(), true);
         callbacks.setExtensionName("SpringSpider");
         this.stdout.println("SpringSpider v" + version);
+        this.stdout.println("Author: whwlsfb");
+        this.stdout.println("Github: https://github.com/whwlsfb/SpringSpider");
         this.uiHandler = new UIHandler(this);
         callbacks.addSuiteTab(this.uiHandler);
         scanner = new SpringScanner();

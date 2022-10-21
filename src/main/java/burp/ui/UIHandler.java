@@ -62,6 +62,23 @@ public class UIHandler implements ITab {
 
 
         JPanel panel1 = UIUtil.GetXJPanel();
+
+        JLabel savedTip0 = new JLabel("Saved!");
+        savedTip0.setVisible(false);
+        savedTip0.setBorder(border);
+        savedTip0.setForeground(Color.GREEN);
+        JCheckBox enableBox = new JCheckBox();
+        enableBox.addActionListener(a -> {
+            ConfigUtils.setBoolean(ConfigUtils.ENABLE, enableBox.isSelected());
+            startTimerHide(savedTip0);
+        });
+        enableBox.setSelected(ConfigUtils.getBoolean(ConfigUtils.ENABLE, true));
+        panel1.add(new JLabel("Enable: "));
+        panel1.add(enableBox);
+        panel1.add(savedTip0);
+        mainPanel.add(panel1);
+
+        panel1 = UIUtil.GetXJPanel();
         dirScanDeeper = new JTextField(10);
         dirScanDeeper.setText(String.valueOf(ConfigUtils.getInt(ConfigUtils.DIR_SCAN_DEEPER, 3)));
         dirScanDeeper.setMaximumSize(dirScanDeeper.getPreferredSize());

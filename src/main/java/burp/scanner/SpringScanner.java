@@ -2,6 +2,7 @@ package burp.scanner;
 
 import burp.*;
 import burp.scanner.sub.SpringActuator;
+import burp.utils.ConfigUtils;
 import burp.utils.Utils;
 
 import java.net.URL;
@@ -62,16 +63,20 @@ public class SpringScanner implements IScannerCheck {
 
     @Override
     public List<IScanIssue> doPassiveScan(IHttpRequestResponse baseRequestResponse) {
-        URL originUrl = cleanURL(Utils.Helpers.analyzeRequest(baseRequestResponse).getUrl());
-        List<IScanIssue> result = new ArrayList<>();
-        URL[] urls = Utils.splitUrls(originUrl);
-        for (URL url : urls) {
-            if (!isChecked(url.toString()))
-                for (ISubScanner subScanner : subScanners) {
-                    result.addAll(subScanner.check(url, baseRequestResponse));
-                }
+        if (ConfigUtils.getBoolean(ConfigUtils.ENABLE, true)) {
+            URL originUrl = cleanURL(Utils.Helpers.analyzeRequest(baseRequestResponse).getUrl());
+            List<IScanIssue> result = new ArrayList<>();
+            URL[] urls = Utils.splitUrls(originUrl);
+            for (URL url : urls) {
+                if (!isChecked(url.toString()))
+                    for (ISubScanner subScanner : subScanners) {
+                        result.addAll(subScanner.check(url, baseRequestResponse));
+                    }
+            }
+            return result;
+        } else {
+            return null;
         }
-        return result;
     }
 
     public URL cleanURL(URL originUrl) {
