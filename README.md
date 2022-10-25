@@ -27,3 +27,8 @@
 #### Scan Point
 
 该设置项为修改启动扫描的端点，为了避免请求频率过大，目前支持启用的端点有「/actuator/env」、「/actuator」、「/env」，建议全部启用。
+
+# 鸣谢
+插件中部分代码借鉴于以下项目
+
+https://github.com/sting8k/BurpSuite_403Bypasser
