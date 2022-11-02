@@ -2,14 +2,18 @@ package burp.scanner;
 
 import burp.*;
 import burp.scanner.sub.SpringActuator;
+import burp.utils.BypassPayloadUtils;
 import burp.utils.ConfigUtils;
 import burp.utils.Utils;
+import net.jodah.expiringmap.ExpiringMap;
 
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class SpringScanner implements IScannerCheck {
 
@@ -56,9 +60,11 @@ public class SpringScanner implements IScannerCheck {
     };
 
     List<String> scannedUrls = new ArrayList<>();
+
+    Map<String, Object> scannedNewUrls = ExpiringMap.builder().expiration(1, TimeUnit.HOURS).build();
     List<ISubScanner> subScanners = new ArrayList<ISubScanner>() {{
 //        add(new APIDoc());
-        add(new SpringActuator());
+        add(new SpringActuator(SpringScanner.this));
     }};
 
     @Override
@@ -74,6 +80,17 @@ public class SpringScanner implements IScannerCheck {
                     }
             }
             return result;
+        } else {
+            return null;
+        }
+    }
+
+    public synchronized IHttpRequestResponse doRequest(List<String> originHeaders, IHttpRequestResponse originRequestResponse, URL newUrl) {
+        String urlMd5 = Utils.MD5(newUrl.toString());
+        if (!scannedNewUrls.containsKey(urlMd5)) {
+            scannedNewUrls.put(urlMd5, newUrl);
+            byte[] newRequest = BypassPayloadUtils.makeNewGETRequest(originHeaders, newUrl);
+            return Utils.Callback.makeHttpRequest(originRequestResponse.getHttpService(), newRequest);
         } else {
             return null;
         }

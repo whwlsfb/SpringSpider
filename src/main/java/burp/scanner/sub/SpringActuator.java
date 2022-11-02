@@ -4,6 +4,7 @@ import burp.*;
 import burp.scanner.IResponseChecker;
 import burp.scanner.ISubScanner;
 import burp.scanner.Payload;
+import burp.scanner.SpringScanner;
 import burp.utils.BypassPayloadUtils;
 import burp.utils.ConfigUtils;
 import burp.utils.Utils;
@@ -13,6 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SpringActuator implements ISubScanner {
+    private SpringScanner scanner;
+
+    public SpringActuator(SpringScanner scanner) {
+        this.scanner = scanner;
+    }
+
     private final List<Payload> payloads = new ArrayList<Payload>() {{
         add(new Payload(new ArrayList<String[]>() {{
             add(new String[]{"env"});
@@ -74,12 +81,13 @@ public class SpringActuator implements ISubScanner {
             for (String[] resParts : payload.resources) {
                 if (Utils.urlAllowScan(resParts)) {
                     for (URL newUrl : BypassPayloadUtils.getBypassPayloads(url, resParts, ConfigUtils.getDict(ConfigUtils.DIR_BYPASS))) {
-                        byte[] newRequest = BypassPayloadUtils.makeNewGETRequest(originHeaders, newUrl);
-                        IHttpRequestResponse resp = Utils.Callback.makeHttpRequest(originRequestResponse.getHttpService(), newRequest);
-                        Issue issue = payload.responseChecker.checkResponse(originRequestResponse, resp, newUrl);
-                        if (issue != null) {
-                            issues.add(issue);
-                            break;
+                        IHttpRequestResponse resp = scanner.doRequest(originHeaders, originRequestResponse, newUrl);
+                        if (resp != null) {
+                            Issue issue = payload.responseChecker.checkResponse(originRequestResponse, resp, newUrl);
+                            if (issue != null) {
+                                issues.add(issue);
+                                break;
+                            }
                         }
                     }
                 }
